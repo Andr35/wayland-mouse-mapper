@@ -11,10 +11,47 @@ readarray -t devices <<<$(libinput list-devices | grep pointer -B4 | grep -o '/d
 BTN_EXTRA=(KEY_LEFTMETA KEY_PAGEUP)
 BTN_SIDE=(KEY_LEFTMETA KEY_PAGEDOWN)
 
+# Workspaces config
+ws_total=$(wmctrl -d | wc -l)
+ws_curr=0
+
+# Useful info about wmctrl
+# https://askubuntu.com/questions/5229/how-can-i-bind-a-key-to-cycle-between-workspaces
+
+function wsUpdateCurrent(){
+    ws_curr=$(wmctrl -d | awk '$2=="*"{print $1}')
+}
+
+function wsNext(){
+    wsUpdateCurrent;
+
+    if [ "$ws_curr" -lt "$ws_total" ]; then
+        wmctrl -s $(($ws_curr + 1))
+    fi
+}
+
+function wsPrev(){
+    wsUpdateCurrent;
+
+    if [ "$ws_curr" -gt "0" ]; then
+        wmctrl -s $(($ws_curr - 1))
+    fi
+}
+
+
 function pressKey(){
     device=$1; key=$2; value=$3
     # echo "pressing ${key} ${value}"
-    evemu-event ${keyboard} --sync --type ${event_type} --code ${key} --value ${value};
+    # evemu-event ${keyboard} --sync --type ${event_type} --code ${key} --value ${value};
+
+    if [ $key == "KEY_PAGEUP" ] && [ $value == "1" ]; then
+        wsNext
+    fi
+
+    if [ $key == "KEY_PAGEDOWN" ] && [ $value == "1" ]; then
+        wsPrev
+    fi
+
 }
 
 function pressCommand(){
