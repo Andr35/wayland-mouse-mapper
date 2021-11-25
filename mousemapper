@@ -11,31 +11,26 @@ readarray -t devices <<<$(libinput list-devices | grep pointer -B4 | grep -o '/d
 BTN_EXTRA=(KEY_LEFTMETA KEY_PAGEUP)
 BTN_SIDE=(KEY_LEFTMETA KEY_PAGEDOWN)
 
-# Workspaces config
-ws_total=$(wmctrl -d | wc -l)
-ws_curr=0
+function press() {
+    evemu-event ${keyboard} --sync --type EV_KEY --code $1 --value 1;
+}
 
-# Useful info about wmctrl
-# https://askubuntu.com/questions/5229/how-can-i-bind-a-key-to-cycle-between-workspaces
-
-function wsUpdateCurrent(){
-    ws_curr=$(wmctrl -d | awk '$2=="*"{print $1}')
+function release() {
+    evemu-event ${keyboard} --sync --type EV_KEY --code $1 --value 0;    
 }
 
 function wsNext(){
-    wsUpdateCurrent;
-
-    if [ "$ws_curr" -lt "$ws_total" ]; then
-        wmctrl -s $(($ws_curr + 1))
-    fi
+    # Press
+    press KEY_LEFTCTRL; press KEY_LEFTALT; press KEY_RIGHT;
+    # Release
+    release KEY_RIGHT; release KEY_LEFTALT; release KEY_LEFTCTRL;
 }
 
 function wsPrev(){
-    wsUpdateCurrent;
-
-    if [ "$ws_curr" -gt "0" ]; then
-        wmctrl -s $(($ws_curr - 1))
-    fi
+    # Press
+    press KEY_LEFTCTRL; press KEY_LEFTALT; press KEY_LEFT;
+    # Release
+    release KEY_LEFT; release KEY_LEFTALT; release KEY_LEFTCTRL;
 }
 
 
